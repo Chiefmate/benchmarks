@@ -112,6 +112,24 @@ def _run_internal(benchmark_method, harness_info, site_package_info,
         benchmark_class_name,
         benchmark_method_name)
 
+
+    # hhlee -- start
+    # e.g. {"cluster":
+    #   {"chief":["squad-bert-sync-batch32-chief-0.default.svc:2222"],
+    #   "worker":["squad-bert-sync-batch32-worker-0.default.svc:2222","squad-bert-sync-batch32-worker-1.default.svc:2222","squad-bert-sync-batch32-worker-2.default.svc:2222"]},
+    # "task":{"type":"chief","index":0},
+    # "environment":"cloud"}
+    tf_config = json.loads(os.environ.get('TF_CONFIG') or '{}')
+    task_config = tf_config.get('task', {})
+    task_type = task_config.get('type')
+    task_index = task_config.get('index')
+    ## network profiling on ps or chief task
+    if task_type == 'ps' or task_type == 'chief':
+      os.system("sh /workspace/network.sh &")
+    ## gpu profiling on chief or worker task
+    if task_type == 'chief' or task_type == 'worker':
+      os.system("sh /workspace/gpu.sh &")
+    # hhlee -- end
     # Start background threads for profiler and system info tracker
     tensorflow_profiler.start()
     process_info_tracker.start()
@@ -139,6 +157,15 @@ def _run_internal(benchmark_method, harness_info, site_package_info,
     # Stop background threads for profiler and system info tracker
     process_info = process_info_tracker.stop()
     tensorflow_profiler.stop()
+    # hhlee -- start
+    # jct in tf_cnn_benchmark = wall_time in perfzero
+    model_txt=open('/tf_cnn_benchmarks/model.txt','r')
+    save_dir_name=model_txt.read()
+    jct=open('/result/'+save_dir_name.strip()+'/'+task_type+'_'+str(task_index)+'_jct.txt','w')
+    jct.write('%.2f'%(raw_benchmark_result['wall_time']))
+    jct.close()
+    model_txt.close()
+    # hhlee -- end
 
   upload_timestamp = time.time()
   benchmark_result = report_utils.build_benchmark_result(
