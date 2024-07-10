@@ -124,7 +124,7 @@ def _run_internal(benchmark_method, harness_info, site_package_info,
     task_type = task_config.get('type')
     task_index = task_config.get('index')
     ## network profiling on ps or chief task
-    if task_type == 'ps' or task_type == 'chief':
+    if task_type == 'ps' or task_type == 'chief' or task_type == 'worker':
       os.system("sh /workspace/network.sh &")
     ## gpu profiling on chief or worker task
     if task_type == 'chief' or task_type == 'worker':
