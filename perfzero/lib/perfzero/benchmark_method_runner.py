@@ -74,7 +74,7 @@ def _run_internal(benchmark_method, harness_info, site_package_info,
   else:
     benchmark_class, benchmark_method_name = benchmark_method.rsplit('.', 1)
   benchmark_class_name = benchmark_class.rsplit('.', 1)[1]
-        
+
   tensorflow_profiler = TensorFlowProfiler(
       config.profiler_enabled_time_str, output_dir)
   process_info_tracker = ProcessInfoTracker(output_dir)
@@ -126,6 +126,9 @@ def _run_internal(benchmark_method, harness_info, site_package_info,
     ## network profiling on ps or chief task
     if task_type == 'ps' or task_type == 'chief' or task_type == 'worker':
       os.system("sh /workspace/network.sh &")
+      print('========================')
+      print('network profile started!')
+      print('========================')
     ## gpu profiling on chief or worker task
     if task_type == 'chief' or task_type == 'worker':
       os.system("sh /workspace/gpu.sh &")
@@ -159,7 +162,7 @@ def _run_internal(benchmark_method, harness_info, site_package_info,
     tensorflow_profiler.stop()
     # hhlee -- start
     # jct in tf_cnn_benchmark = wall_time in perfzero
-    model_txt=open('/tf_cnn_benchmarks/model.txt','r')
+    model_txt=open('/workspace/model.txt','r')
     save_dir_name=model_txt.read()
     jct=open('/result/'+save_dir_name.strip()+'/'+task_type+'_'+str(task_index)+'_jct.txt','w')
     jct.write('%.2f'%(raw_benchmark_result['wall_time']))
